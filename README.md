@@ -1,5 +1,7 @@
 # Power Forecast Platform
 
+Live backend API documentation: [Open the FastAPI docs](https://backend-five-mu-84.vercel.app/docs).
+
 A day-ahead wind dashboard for a UK energy utility. It fetches national wind forecasts and actuals directly from the Elexon Insights API, shows the forecast available at a selected order deadline, and measures forecast accuracy. The dashboard currently uses a fixed January 2026 analysis range.
 
 ## Run locally
