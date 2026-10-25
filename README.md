@@ -69,7 +69,9 @@ Elexon request failures return HTTP 502. Invalid ranges return HTTP 422.
 
 The backend needs outbound HTTPS access to `data.elexon.co.uk`. Configure `CORS_ORIGINS` on the backend to include the deployed frontend origin. Set `VITE_API_URL` in Vercel to the deployed backend URL and redeploy so Vite can bake it into the frontend build.
 
-For Vercel, import this repository and set the project root directory to `frontend`; use `npm run build` and `dist` as the output directory. For Heroku, the backend is in a monorepo subdirectory and must be deployed with `backend/` as the app root (for example, by pushing a Git subtree). **Heroku deployment is not ready with the current `backend/Dockerfile`: it currently contains only the startup command and still needs a base image, dependency installation, and app copy steps.** The existing `backend/heroku.yml` configures a Docker-based Heroku build.
+For Vercel, create two projects from this repository. Set the frontend project's root directory to `frontend` and use the Vite build command and `dist` output. Set the backend project's root directory to `backend`; `backend/index.py` exposes the FastAPI application and `backend/requirements.txt` lists its dependencies. Configure `VITE_API_URL` on the frontend project and `CORS_ORIGINS` on the backend project with the corresponding deployment URLs. Vercel uses its managed runtimes for these projects; Docker Compose remains available for local development.
+
+For Heroku, the backend is in a monorepo subdirectory and must be deployed with `backend/` as the app root (for example, by pushing a Git subtree). The existing `backend/Dockerfile` and `backend/heroku.yml` configure a Docker-based Heroku build.
 
 ## Current scope
 
