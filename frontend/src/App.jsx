@@ -6,6 +6,7 @@ import { addDays, dayLabel, gw, hhmm, hourLabel, shortDay, stamp } from "./forma
 import { useApi, useDebounced } from "./hooks.js";
 
 const CUTOFF_OPTIONS = Array.from({ length: 13 }, (_, i) => 6 + i * 0.5); // 06:00 to 12:00
+const MAX_DEMAND_GW = 100;
 const SLICES = [
   { key: "hour", label: "Time of day",
     note: "Each bar is one hour of the day. Look for hours where forecasts are consistently weaker." },
@@ -200,10 +201,12 @@ function AccuracySection({ cutoff, start, end }) {
 
 function BuySection({ meta, day, cutoff, start, end }) {
   const [demand, setDemand] = useState("");
+  const [demandCapped, setDemandCapped] = useState(false);
   const [band, setBand] = useState(meta.default_band);
   const debounced = useDebounced(demand);
   const demandMw = parseFloat(debounced) * 1000;
-  const valid = Number.isFinite(demandMw) && demandMw > 0;
+  const overDemandLimit = Number.isFinite(demandMw) && demandMw > MAX_DEMAND_GW * 1000;
+  const valid = Number.isFinite(demandMw) && demandMw > 0 && demandMw <= MAX_DEMAND_GW * 1000;
   const r = useApi(
     () => (valid
       ? api.shortfall({
@@ -225,8 +228,19 @@ function BuySection({ meta, day, cutoff, start, end }) {
       <div className="inputs">
         <div className="field">
           <label htmlFor="demand">Expected demand (GW, same for every hour)</label>
-          <input id="demand" type="number" min="0" step="0.5" inputMode="decimal" placeholder="e.g. 30"
-                 value={demand} onChange={(e) => setDemand(e.target.value)} />
+          <input id="demand" type="number" min="0" max={MAX_DEMAND_GW} step="0.5" inputMode="decimal"
+                 placeholder="e.g. 30" value={demand}
+                 onChange={(e) => {
+                   setDemand(e.target.value);
+                   setDemandCapped(false);
+                 }}
+                 onBlur={(e) => {
+                   const value = Number(e.target.value);
+                   if (Number.isFinite(value) && value > MAX_DEMAND_GW) {
+                     setDemand(String(MAX_DEMAND_GW));
+                     setDemandCapped(true);
+                   }
+                 }} />
         </div>
         <div className="field">
           <label htmlFor="band">Safety margin</label>
@@ -236,7 +250,11 @@ function BuySection({ meta, day, cutoff, start, end }) {
         </div>
       </div>
 
-      {!valid && <p className="status">Enter a demand figure to see how much you would need to buy.</p>}
+      {demandCapped && <p className="status" role="status">Demand was capped at 100 GW, the maximum allowed.</p>}
+      {overDemandLimit && !demandCapped &&
+        <p className="status" role="status">The maximum is 100 GW. This value will be capped when you leave the field.</p>}
+      {!valid && !overDemandLimit &&
+        <p className="status">Enter a demand figure to see how much you would need to buy.</p>}
       {valid && (
         <Status state={r}>
           {s && (
