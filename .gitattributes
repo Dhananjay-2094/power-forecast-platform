@@ -1,2 +1,2 @@
-backend/* linguist-detectable=true
-frontend/* linguist-detectable=true
+power-forecast-platform/backend/* linguist-detectable=true
+power-forecast-platform/frontend/* linguist-detectable=true
